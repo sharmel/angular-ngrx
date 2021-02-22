@@ -1,1 +1,1 @@
-angular-ngrx
+angular-ngrx with ngrx data
