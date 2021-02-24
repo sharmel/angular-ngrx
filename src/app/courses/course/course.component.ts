@@ -26,6 +26,9 @@ export class CourseComponent implements OnInit {
   displayedColumns = ['seqNo', 'description', 'duration'];
 
   nextPage = 0;
+  pageSize = 3;
+
+  disableLoadMore: boolean = false;
 
   constructor(
     private coursesService: CourseEntityService,
@@ -48,11 +51,16 @@ export class CourseComponent implements OnInit {
       withLatestFrom(this.course$), // combines two observable with lesson entities and course$ and return the two as its response
       tap(([lessons, course]) => {
         if(this.nextPage == 0) {
-          this.loadLessonsPage(course)
+          this.loadLessonsPage(course);
         }
       }),
-      map(([lessons, course]) => 
-        lessons.filter(lesson => lesson.courseId == course.id)
+      map(([lessons, course]) => {
+        if(lessons.length == course.lessonsCount) {
+          this.disableLoadMore = true;
+        }
+        return lessons.filter(lesson => lesson.courseId == course.id)
+      }
+        
       )
     );
 
@@ -65,7 +73,7 @@ export class CourseComponent implements OnInit {
     this.lessonsService.getWithQuery({
       "courseId": course.id.toString(),
       "pageNumber": this.nextPage.toString(),
-      "pageSize": '3'
+      "pageSize": this.pageSize.toString()
     }
     );
 
