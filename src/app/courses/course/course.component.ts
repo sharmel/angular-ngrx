@@ -55,7 +55,8 @@ export class CourseComponent implements OnInit {
         }
       }),
       map(([lessons, course]) => {
-        if(lessons.length == course.lessonsCount) {
+        
+        if((lessons.length == course.lessonsCount) || course.lessonsCount == undefined) {
           this.disableLoadMore = true;
         }
         return lessons.filter(lesson => lesson.courseId == course.id)
