@@ -1,7 +1,7 @@
 import {AfterViewInit, ChangeDetectionStrategy, Component, OnInit} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {Course} from '../model/course';
-import {Observable, of} from 'rxjs';
+import {Observable, of, Subject} from 'rxjs';
 import {Lesson} from '../model/lesson';
 import {concatMap, delay, filter, first, map, shareReplay, tap, withLatestFrom} from 'rxjs/operators';
 import {CoursesHttpService} from '../services/courses-http.service';
@@ -28,7 +28,9 @@ export class CourseComponent implements OnInit {
   nextPage = 0;
   pageSize = 3;
 
-  disableLoadMore: boolean = false;
+  disableLoadMore = false;
+
+  loadMore$ = new Subject<boolean>();
 
   constructor(
     private coursesService: CourseEntityService,
@@ -55,10 +57,19 @@ export class CourseComponent implements OnInit {
         }
       }),
       map(([lessons, course]) => {
-        
-        if((lessons.length == course.lessonsCount) || course.lessonsCount == undefined) {
-          this.disableLoadMore = true;
-        }
+        const lessonArr = [];
+        lessons.filter(lesson => {
+          if(lesson.courseId == course.id) {
+            lessonArr.push(lesson.courseId);
+            if(lessonArr.length == course.lessonsCount) {
+            this.loadMore$.next(true);
+            } 
+          }
+        });
+
+        if(course.lessonsCount == undefined) {
+          this.loadMore$.next(true);
+        } 
         return lessons.filter(lesson => lesson.courseId == course.id)
       }
         
@@ -77,6 +88,10 @@ export class CourseComponent implements OnInit {
       "pageSize": this.pageSize.toString()
     }
     );
+
+    this.loadMore$.subscribe(next => {
+      this.disableLoadMore = next;
+    });
 
     this.nextPage +=1;
   }
